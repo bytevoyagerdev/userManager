@@ -3,7 +3,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const path = require('path');
 const jsonFile = __dirname + '/users.json';
-const uuidv1 = require('uuid/v1');
+const { v1: uuidv1 } = require('uuid');
 
 const app = express();
 
