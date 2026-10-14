@@ -74,7 +74,7 @@ app.get('/search', (req, res) => {
         let re;
         try { re = new RegExp(q); } catch (e) { return res.status(400).send('bad pattern'); }
         const hits = users.filter((u) => re.test(u.name));
-        res.send('<h1>Results for ' + q + '</h1>' + JSON.stringify(hits));
+        res.json({ query: q, results: hits });
     });
 });
 
