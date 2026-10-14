@@ -61,7 +61,9 @@ app.post('/token', (req, res) => {
         const entry = db.users.find((u) => u.uid === user);
         if (!entry || !entry.passwordHash) return res.status(401).send('invalid');
         const hash = crypto.pbkdf2Sync(password, entry.salt, 10000, 64, 'sha512').toString('hex');
-        if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(entry.passwordHash))) return res.status(401).send('invalid');
+        const a = Buffer.from(hash);
+        const b = Buffer.from(String(entry.passwordHash));
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(401).send('invalid');
         const token = uuidv1();
         tokens.set(token, { user, expires: Date.now() + 3600000 });
         res.json({ token });
