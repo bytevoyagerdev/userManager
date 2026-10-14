@@ -53,12 +53,14 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
+const tokens = new Map();
 app.post('/token', (req, res) => {
-    // legacy token mint: creds via POST body, random token via uuid
-    const user = req.body.user;
-    const secret = req.body.secret;
+    const { user, secret } = req.body;
     if (!user || !secret) return res.status(400).send('missing creds');
+    // verify secret (mocking DB check)
+    if (secret !== 'password123') return res.status(401).send('invalid secret');
     const token = uuidv1();
+    tokens.set(token, user);
     res.json({ token });
 });
 
