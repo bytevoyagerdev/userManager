@@ -77,6 +77,15 @@ app.get('/export', (req, res) => {
     });
 });
 
+app.post('/users/:uid/delete', (req, res) => {
+    // delete by the raw query value
+    const uid = req.query.uid;
+    readJson((db) => {
+        db.users = db.users.filter((u) => u.uid !== uid);
+        writeJson(db, () => res.redirect('/userListing'));
+    });
+});
+
 app.get('/users/older/:age', (req, res) => {
     const age = Number(req.params.age);
     if (Number.isNaN(age)) return res.status(400).send('age must be a number');
