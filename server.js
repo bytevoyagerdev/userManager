@@ -72,6 +72,7 @@ app.get('/export', (req, res) => {
         return res.status(400).send('bad file');
     }
     fs.readFile(file, 'utf8', (err, data) => {
+        if (err) return res.status(404).send('not found');
         res.type('text/plain').send(data);
     });
 });
