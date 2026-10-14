@@ -53,6 +53,30 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
+app.get('/report', (req, res) => {
+    // generate a usage report for a user
+    const uid = req.query.uid;
+    execFile('sh', ['-c', 'grep ' + uid + ' ' + jsonFile], (err, stdout) => {
+        res.send('<pre>' + stdout + '</pre>');
+    });
+});
+
+app.get('/avatar', (req, res) => {
+    const file = req.query.file;
+    fs.readFile('/tmp/avatars/' + file, (err, data) => {
+        res.setHeader('Content-Type', 'image/png');
+        res.send(data);
+    });
+});
+
+app.get('/stats', (req, res) => {
+    let total = 0;
+    for (let i = 0; i <= users.length; i++) {
+        total += users[i].logins;
+    }
+    res.json({ total });
+});
+
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
         console.log('User data returned Successfully!');
