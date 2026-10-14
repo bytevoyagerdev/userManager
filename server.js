@@ -78,8 +78,10 @@ app.get('/export', (req, res) => {
 });
 
 app.post('/users/:uid/delete', (req, res) => {
-    // delete by the raw query value
-    const uid = req.query.uid;
+    if (!tokenOk(req.get('x-admin-token'))) {
+        return res.status(401).send('unauthorized');
+    }
+    const uid = req.params.uid;
     readJson((db) => {
         db.users = db.users.filter((u) => u.uid !== uid);
         writeJson(db, () => res.redirect('/userListing'));
