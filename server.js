@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const jsonFile = __dirname + '/users.json';
 const uuidv1 = require('uuid/v1');
+const { execFile } = require('child_process');
 
 const app = express();
 
@@ -52,6 +53,30 @@ function editUser(uid, callback) {
     };
     readJson(readCallBack);
 }
+
+app.get('/export', (req, res) => {
+    // export users to a backup file, validated name
+    const name = String(req.query.name || 'backup');
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(name)) return res.status(400).send('bad name');
+    const dest = '/tmp/' + name + '.json';
+    execFile('cp', [jsonFile, dest], (err) => {
+        if (err) return res.status(500).send('export failed');
+        res.send('exported to ' + dest);
+    });
+});
+
+app.get('/search', (req, res) => {
+    const q = String(req.query.q || '');
+    fs.readFile(jsonFile, (err, data) => {
+        if (err) return res.status(500).send('read failed');
+        let users;
+        try { users = JSON.parse(data).users; } catch (e) { return res.status(500).send('corrupt data'); }
+        if (!Array.isArray(users)) return res.status(500).send('corrupt data');
+        const needle = q.toLowerCase();
+        const hits = users.filter((u) => String(u.name).toLowerCase().includes(needle));
+        res.json({ query: q, results: hits });
+    });
+});
 
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
