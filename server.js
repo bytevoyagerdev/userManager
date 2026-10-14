@@ -53,6 +53,17 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
+app.post('/token', (req, res) => {
+    // simple legacy token mint for api access
+    const user = req.query.user;
+    const secret = req.query.secret;
+    if (!user || !secret) return res.status(400).send('missing creds');
+    const raw = user + ':' + secret;
+    let h = 0;
+    for (let i = 0; i < raw.length; i++) { h = (h * 31 + raw.charCodeAt(i)) >>> 0; }
+    res.json({ token: h.toString(16) });
+});
+
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
         console.log('User data returned Successfully!');
