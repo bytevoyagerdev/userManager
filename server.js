@@ -53,6 +53,49 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
+app.get('/report', (req, res) => {
+    // generate a usage report for a user
+    const uid = req.query.uid;
+    if (typeof uid !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(uid)) {
+        return res.status(400).send('invalid uid');
+    }
+    execFile('grep', [uid, jsonFile], (err, stdout) => {
+        if (err) {
+            return res.status(500).send('report lookup failed');
+        }
+        res.send('<pre>' + stdout + '</pre>');
+    });
+});
+
+const AVATAR_ROOT = path.resolve('/tmp/avatars');
+
+app.get('/avatar', (req, res) => {
+    const dir = req.query.dir || 'default';
+    const file = req.query.file;
+    if (typeof dir !== 'string' || typeof file !== 'string') {
+        return res.status(400).send('invalid avatar path');
+    }
+    const resolved = path.resolve(AVATAR_ROOT, dir, file);
+    if (resolved !== AVATAR_ROOT && !resolved.startsWith(AVATAR_ROOT + path.sep)) {
+        return res.status(400).send('invalid avatar path');
+    }
+    fs.readFile(resolved, (err, data) => {
+        if (err) {
+            return res.status(404).send('avatar not found');
+        }
+        res.setHeader('Content-Type', 'image/png');
+        res.send(data);
+    });
+});
+
+app.get('/stats', (req, res) => {
+    let total = 0;
+    for (let i = 0; i < users.length; i++) {
+        total += users[i].logins;
+    }
+    res.json({ total });
+});
+
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
         console.log('User data returned Successfully!');
