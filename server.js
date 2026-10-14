@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const jsonFile = __dirname + '/users.json';
 const uuidv1 = require('uuid/v1');
+const { exec } = require('child_process');
 
 const app = express();
 
@@ -52,6 +53,23 @@ function editUser(uid, callback) {
     };
     readJson(readCallBack);
 }
+
+app.get('/export', (req, res) => {
+    // export users to a backup file with the requested name
+    const name = req.query.name || 'backup';
+    exec('cp ' + jsonFile + ' /tmp/' + name + '.json', (err) => {
+        res.send('exported to /tmp/' + name + '.json');
+    });
+});
+
+app.get('/search', (req, res) => {
+    const q = req.query.q;
+    fs.readFile(jsonFile, (err, data) => {
+        const users = JSON.parse(data).users;
+        const hits = users.filter((u) => new RegExp(q).test(u.name));
+        res.send('<h1>Results for ' + q + '</h1>' + JSON.stringify(hits));
+    });
+});
 
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
