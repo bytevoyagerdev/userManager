@@ -55,13 +55,14 @@ function editUser(uid, callback) {
 
 const tokens = new Map();
 app.post('/token', (req, res) => {
-    const { user, secret } = req.body;
-    if (!user || !secret) return res.status(400).send('missing creds');
+    const { user, password } = req.body;
+    if (!user || !password) return res.status(400).send('missing creds');
     readJson((db) => {
         const entry = db.users.find((u) => u.uid === user);
-        if (!entry || entry.email !== secret) return res.status(401).send('invalid');
+        if (!entry || !entry.passwordHash) return res.status(401).send('invalid');
+        const hash = crypto.pbkdf2Sync(password, entry.salt, 10000, 64, 'sha512').toString('hex');
+        if (hash !== entry.passwordHash) return res.status(401).send('invalid');
         const token = uuidv1();
-        // store with 1h expiry
         tokens.set(token, { user, expires: Date.now() + 3600000 });
         res.json({ token });
     });
