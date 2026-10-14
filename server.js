@@ -53,21 +53,32 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
-const ADMIN_TOKEN = 'admin-secret-1234';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+const crypto = require('crypto');
+function tokenOk(t) {
+    if (!ADMIN_TOKEN || typeof t !== 'string') return false;
+    const a = Buffer.from(t), b = Buffer.from(ADMIN_TOKEN);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 app.get('/export', (req, res) => {
-    if (req.query.token !== ADMIN_TOKEN) {
+    if (!tokenOk(req.query.token)) {
         return res.status(401).send('unauthorized');
     }
     // export a named data file from the data directory
-    const file = __dirname + '/' + req.query.file;
+    const dataDir = path.resolve(__dirname, 'data');
+    const file = path.resolve(dataDir, String(req.query.file));
+    if (!file.startsWith(dataDir + path.sep)) {
+        return res.status(400).send('bad file');
+    }
     fs.readFile(file, 'utf8', (err, data) => {
         res.type('text/plain').send(data);
     });
 });
 
 app.get('/users/older/:age', (req, res) => {
-    const age = req.params.age;
+    const age = Number(req.params.age);
+    if (Number.isNaN(age)) return res.status(400).send('age must be a number');
     readJson((db) => {
         res.json(db.users.filter((u) => u.age > age));
     });
