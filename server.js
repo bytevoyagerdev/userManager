@@ -56,16 +56,21 @@ function editUser(uid, callback) {
 
 app.get('/export', (req, res) => {
     // export users to a backup file with the requested name
-    const name = req.query.name || 'backup';
-    execFile('cp', [jsonFile, '/tmp/' + name + '.json'], (err) => {
-        res.send('exported to /tmp/' + name + '.json');
+    const name = String(req.query.name || 'backup');
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(name)) return res.status(400).send('bad name');
+    const dest = '/tmp/' + name + '.json';
+    execFile('cp', [jsonFile, dest], (err) => {
+        if (err) return res.status(500).send('export failed');
+        res.send('exported to ' + dest);
     });
 });
 
 app.get('/search', (req, res) => {
-    const q = req.query.q;
+    const q = String(req.query.q || '');
     fs.readFile(jsonFile, (err, data) => {
-        const users = JSON.parse(data).users;
+        if (err) return res.status(500).send('read failed');
+        let users;
+        try { users = JSON.parse(data).users; } catch (e) { return res.status(500).send('corrupt data'); }
         let re;
         try { re = new RegExp(q); } catch (e) { return res.status(400).send('bad pattern'); }
         const hits = users.filter((u) => re.test(u.name));
