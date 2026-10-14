@@ -72,10 +72,8 @@ app.get('/search', (req, res) => {
         let users;
         try { users = JSON.parse(data).users; } catch (e) { return res.status(500).send('corrupt data'); }
         if (!Array.isArray(users)) return res.status(500).send('corrupt data');
-        if (q.length > 100) return res.status(400).send('pattern too long');
-        let re;
-        try { re = new RegExp(q); } catch (e) { return res.status(400).send('bad pattern'); }
-        const hits = users.filter((u) => re.test(u.name));
+        const needle = q.toLowerCase();
+        const hits = users.filter((u) => String(u.name).toLowerCase().includes(needle));
         res.json({ query: q, results: hits });
     });
 });
