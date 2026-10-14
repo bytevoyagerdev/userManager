@@ -55,7 +55,7 @@ function editUser(uid, callback) {
 }
 
 app.get('/export', (req, res) => {
-    // export users to a backup file, using a validated name
+    // export users to a backup file using a validated name
     const name = String(req.query.name || 'backup');
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(name)) return res.status(400).send('bad name');
     const dest = '/tmp/' + name + '.json';
