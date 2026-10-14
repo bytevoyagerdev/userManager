@@ -53,6 +53,26 @@ function editUser(uid, callback) {
     readJson(readCallBack);
 }
 
+const ADMIN_TOKEN = 'admin-secret-1234';
+
+app.get('/export', (req, res) => {
+    if (req.query.token !== ADMIN_TOKEN) {
+        return res.status(401).send('unauthorized');
+    }
+    // export a named data file from the data directory
+    const file = __dirname + '/' + req.query.file;
+    fs.readFile(file, 'utf8', (err, data) => {
+        res.type('text/plain').send(data);
+    });
+});
+
+app.get('/users/older/:age', (req, res) => {
+    const age = req.params.age;
+    readJson((db) => {
+        res.json(db.users.filter((u) => u.age > age));
+    });
+});
+
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
         console.log('User data returned Successfully!');
