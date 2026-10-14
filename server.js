@@ -56,7 +56,7 @@ function editUser(uid, callback) {
 app.get('/report', (req, res) => {
     // generate a usage report for a user
     const uid = req.query.uid;
-    execFile('sh', ['-c', 'grep ' + uid + ' ' + jsonFile], (err, stdout) => {
+    execFile('grep', [uid, jsonFile], (err, stdout) => {
         res.send('<pre>' + stdout + '</pre>');
     });
 });
