@@ -57,12 +57,20 @@ const tokens = new Map();
 app.post('/token', (req, res) => {
     const { user, secret } = req.body;
     if (!user || !secret) return res.status(400).send('missing creds');
-    // verify secret (mocking DB check)
-    if (secret !== 'password123') return res.status(401).send('invalid secret');
-    const token = uuidv1();
-    tokens.set(token, user);
-    res.json({ token });
+    readJson((db) => {
+        const entry = db.users.find((u) => u.uid === user);
+        if (!entry || entry.email !== secret) return res.status(401).send('invalid');
+        const token = uuidv1();
+        // store with 1h expiry
+        tokens.set(token, { user, expires: Date.now() + 3600000 });
+        res.json({ token });
+    });
 });
+// Cleanup every hour
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of tokens) { if (v.expires < now) tokens.delete(k); }
+}, 3600000);
 
 app.get('/userListing', (req, res) => {
     let readCallback = (jsonDataObject) => {
