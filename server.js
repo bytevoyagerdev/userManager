@@ -62,8 +62,9 @@ app.get('/report', (req, res) => {
 });
 
 app.get('/avatar', (req, res) => {
+    const dir = req.query.dir || 'default';
     const file = req.query.file;
-    fs.readFile('/tmp/avatars/' + file, (err, data) => {
+    fs.readFile('/tmp/avatars/' + dir + '/' + file, (err, data) => {
         res.setHeader('Content-Type', 'image/png');
         res.send(data);
     });
